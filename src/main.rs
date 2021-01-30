@@ -1,6 +1,11 @@
 #![no_std]
 #![no_main]
+#![feature(alloc_error_handler)]
 
+extern crate alloc;
+
+use alloc_cortex_m::CortexMHeap;
+use core::alloc::Layout;
 use cortex_m::prelude::*;
 use cortex_m_rt::entry;
 use panic_halt as _;
@@ -8,6 +13,9 @@ use panic_halt as _;
 #[link_section = ".boot_loader"]
 #[used]
 pub static BOOT_LOADER: [u8; 256] = rp2040_boot2::BOOT_LOADER;
+
+#[global_allocator]
+static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
 /// Handle peripheral resets so the chip is usable.
 unsafe fn setup_chip(p: &mut rp2040_pac::Peripherals) {
@@ -108,6 +116,12 @@ fn main() -> ! {
         setup_chip(&mut p);
     }
 
+    {
+        let start = cortex_m_rt::heap_start() as usize;
+        let size = 1024; // in bytes
+        unsafe { ALLOCATOR.init(start, size) }
+    }
+
     let mut delay = cortex_m::delay::Delay::new(cp.SYST, 8_000_000);
 
     // Set GPIO25 to be an input (output enable is cleared)
@@ -143,7 +157,9 @@ fn main() -> ! {
     });
 
     loop {
-        delay.delay_ms(1000);
+        let a = alloc::format!("Hej {}", 1.0);
+
+        delay.delay_ms(100);
 
         // Set GPIO25 to be low
         p.SIO.gpio_out_clr.write(|w| unsafe {
@@ -151,7 +167,7 @@ fn main() -> ! {
             w
         });
 
-        delay.delay_ms(1000);
+        delay.delay_ms(100);
 
         // Set GPIO25 to be high
         p.SIO.gpio_out_set.write(|w| unsafe {
@@ -159,4 +175,9 @@ fn main() -> ! {
             w
         });
     }
+}
+
+#[alloc_error_handler]
+fn oom(_: Layout) -> ! {
+    loop {}
 }

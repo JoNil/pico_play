@@ -9,11 +9,12 @@ description = "Basic blinky program for the Raspberry Pi Pico"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+alloc-cortex-m = "0.4"
 cortex-m = "0.7"
 cortex-m-rt = "0.6.13"
-rp2040-pac = { git = "https://github.com/rp-rs/rp2040-pac", branch="main" }
 panic-halt = "0.2.0"
 rp2040-boot2 = { git = "https://github.com/JoNil/rp2040-boot2-rs.git", branch="main" }
+rp2040-pac = { git = "https://github.com/rp-rs/rp2040-pac", branch="main" }
 
 # this lets you use `cargo fix`!
 [[bin]]
